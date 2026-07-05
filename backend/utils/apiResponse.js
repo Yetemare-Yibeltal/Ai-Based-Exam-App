@@ -61,6 +61,18 @@ const validationErrorResponse = (res, errors) => {
   return errorResponse(res, "Validation failed", 422, errors);
 };
 
+const conflictResponse = (res, message = "Resource already exists") => {
+  return errorResponse(res, message, 409);
+};
+
+const badRequestResponse = (res, message = "Bad request") => {
+  return errorResponse(res, message, 400);
+};
+
+const serverErrorResponse = (res, message = "Internal server error") => {
+  return errorResponse(res, message, 500);
+};
+
 module.exports = {
   successResponse,
   errorResponse,
@@ -70,4 +82,7 @@ module.exports = {
   unauthorizedResponse,
   forbiddenResponse,
   validationErrorResponse,
+  conflictResponse,
+  badRequestResponse,
+  serverErrorResponse,
 };
