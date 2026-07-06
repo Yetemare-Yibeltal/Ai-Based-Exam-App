@@ -23,6 +23,7 @@
   "author": "HEROY Team",
   "license": "ISC",
   "dependencies": {
+    "express-mongo-sanitize": "^2.2.0",
     "sanitize-html": "^2.17.5"
   }
 }
