@@ -4,10 +4,15 @@ const router = express.Router();
 const { protect } = require("../middleware/auth");
 const { restrictTo, teacherOrAdmin } = require("../middleware/role");
 const { aiLimiter } = require("../middleware/rateLimiter");
+const { validateMongoId } = require("../middleware/validate");
 const {
-  validateAIGenerate,
-  validateMongoId,
-} = require("../middleware/validate");
+  generateQuestionValidator,
+  validateQuestionValidator,
+  generateStudyTipsValidator,
+  explainAnswerValidator,
+  analyzeWeakSubjectsValidator,
+  generatePersonalizedPlanValidator,
+} = require("../validators/ai.validator");
 
 const {
   generateQuestions,
@@ -34,88 +39,119 @@ const {
   getValidationHistory,
 } = require("../controllers/ai/validateController");
 
-router.use(protect);
-
-router.post(
-  "/generate",
+// ── STUDENT ROUTES ─────────────────────────────────────────
+router.get(
+  "/study-tips",
+  protect,
+  restrictTo("student"),
   aiLimiter,
+  getStudyTips,
+);
+router.get(
+  "/study-tips/:subject",
+  protect,
+  restrictTo("student"),
+  aiLimiter,
+  getSubjectStudyTips,
+);
+router.get(
+  "/personalized-plan",
+  protect,
+  restrictTo("student"),
+  aiLimiter,
+  getPersonalizedPlan,
+);
+router.get("/exam-tips", protect, getExamTips);
+router.get("/time-management", protect, getTimeManagementTips);
+router.get(
+  "/weak-subjects",
+  protect,
+  restrictTo("student"),
+  aiLimiter,
+  analyzeWeakSubjects,
+);
+router.get(
+  "/subject-recommendations/:subject",
+  protect,
+  restrictTo("student"),
+  aiLimiter,
+  getSubjectRecommendations,
+);
+router.post(
+  "/explain-answer",
+  protect,
+  restrictTo("student"),
+  aiLimiter,
+  explainAnswer,
+);
+router.post(
+  "/batch-explain",
+  protect,
+  restrictTo("student"),
+  aiLimiter,
+  batchExplainAnswers,
+);
+router.post(
+  "/quiz-feedback",
+  protect,
+  restrictTo("student"),
+  aiLimiter,
+  generateQuizFeedback,
+);
+
+// ── TEACHER ROUTES ─────────────────────────────────────────
+router.post(
+  "/generate-questions",
+  protect,
   teacherOrAdmin,
-  validateAIGenerate,
+  aiLimiter,
+  generateQuestionValidator,
   generateQuestions,
 );
-router.post("/generate/bulk", aiLimiter, teacherOrAdmin, bulkGenerateQuestions);
-
-router.post("/validate", aiLimiter, teacherOrAdmin, validateQuestion);
 router.post(
-  "/validate/batch",
+  "/bulk-generate",
+  protect,
+  restrictTo("admin"),
   aiLimiter,
+  bulkGenerateQuestions,
+);
+router.post(
+  "/validate-question",
+  protect,
   teacherOrAdmin,
+  aiLimiter,
+  validateQuestionValidator,
+  validateQuestion,
+);
+router.post(
+  "/batch-validate",
+  protect,
+  teacherOrAdmin,
+  aiLimiter,
   batchValidateQuestions,
 );
-router.post(
-  "/validate/my-questions",
-  aiLimiter,
-  restrictTo("teacher"),
-  validateTeacherQuestions,
-);
-router.get("/validate/history", restrictTo("teacher"), getValidationHistory);
-router.post(
-  "/validate/:id",
-  aiLimiter,
+router.get(
+  "/validate-question/:id",
+  protect,
   teacherOrAdmin,
   validateMongoId("id"),
   validateQuestionById,
 );
-
-router.get("/study-tips", aiLimiter, restrictTo("student"), getStudyTips);
 router.get(
-  "/study-tips/subject/:subject",
-  aiLimiter,
-  restrictTo("student"),
-  getSubjectStudyTips,
+  "/validate-my-questions",
+  protect,
+  restrictTo("teacher"),
+  validateTeacherQuestions,
 );
 router.get(
-  "/study-tips/plan",
-  aiLimiter,
-  restrictTo("student"),
-  getPersonalizedPlan,
+  "/validation-history",
+  protect,
+  teacherOrAdmin,
+  getValidationHistory,
 );
-router.get("/study-tips/exam", restrictTo("student"), getExamTips);
-router.get(
-  "/study-tips/time-management",
-  restrictTo("student"),
-  getTimeManagementTips,
-);
+router.get("/my-history", protect, teacherOrAdmin, getMyAIHistory);
 
-router.get(
-  "/weak-subjects",
-  aiLimiter,
-  restrictTo("student"),
-  analyzeWeakSubjects,
-);
-router.get(
-  "/weak-subjects/:subject",
-  aiLimiter,
-  restrictTo("student"),
-  getSubjectRecommendations,
-);
-
-router.post("/explain", aiLimiter, restrictTo("student"), explainAnswer);
-router.post(
-  "/explain/batch",
-  aiLimiter,
-  restrictTo("student"),
-  batchExplainAnswers,
-);
-
-router.post(
-  "/feedback",
-  aiLimiter,
-  restrictTo("student"),
-  generateQuizFeedback,
-);
-
-router.get("/stats", teacherOrAdmin, getAIUsageStats);
-router.get("/history", getMyAIHistory);
+// ── ADMIN ROUTES ───────────────────────────────────────────
+router.get("/usage-stats", protect, restrictTo("admin"), getAIUsageStats);
 
 module.exports = router;
