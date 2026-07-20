@@ -5,153 +5,132 @@ const { protect } = require("../middleware/auth");
 const { restrictTo, teacherOrAdmin } = require("../middleware/role");
 const { aiLimiter } = require("../middleware/rateLimiter");
 const { validateMongoId } = require("../middleware/validate");
-const {
-  generateQuestionValidator,
-  validateQuestionValidator,
-  generateStudyTipsValidator,
-  explainAnswerValidator,
-  analyzeWeakSubjectsValidator,
-  generatePersonalizedPlanValidator,
-} = require("../validators/ai.validator");
 
-const {
-  generateQuestions,
-  bulkGenerateQuestions,
-  getStudyTips,
-  getSubjectStudyTips,
-  getPersonalizedPlan,
-  getExamTips,
-  getTimeManagementTips,
-  analyzeWeakSubjects,
-  getSubjectRecommendations,
-  explainAnswer,
-  batchExplainAnswers,
-  generateQuizFeedback,
-  getAIUsageStats,
-  getMyAIHistory,
-} = require("../controllers/ai/generateController");
+const generateController = require("../controllers/ai/generateController");
+const validateController = require("../controllers/ai/validateController");
 
-const {
-  validateQuestion,
-  validateQuestionById,
-  batchValidateQuestions,
-  validateTeacherQuestions,
-  getValidationHistory,
-} = require("../controllers/ai/validateController");
-
-// ── STUDENT ROUTES ─────────────────────────────────────────
 router.get(
   "/study-tips",
   protect,
   restrictTo("student"),
   aiLimiter,
-  getStudyTips,
+  generateController.getStudyTips,
 );
 router.get(
   "/study-tips/:subject",
   protect,
   restrictTo("student"),
   aiLimiter,
-  getSubjectStudyTips,
+  generateController.getSubjectStudyTips,
 );
 router.get(
   "/personalized-plan",
   protect,
   restrictTo("student"),
   aiLimiter,
-  getPersonalizedPlan,
+  generateController.getPersonalizedPlan,
 );
-router.get("/exam-tips", protect, getExamTips);
-router.get("/time-management", protect, getTimeManagementTips);
+router.get("/exam-tips", protect, generateController.getExamTips);
+router.get(
+  "/time-management",
+  protect,
+  generateController.getTimeManagementTips,
+);
 router.get(
   "/weak-subjects",
   protect,
   restrictTo("student"),
   aiLimiter,
-  analyzeWeakSubjects,
+  generateController.analyzeWeakSubjects,
 );
 router.get(
   "/subject-recommendations/:subject",
   protect,
   restrictTo("student"),
   aiLimiter,
-  getSubjectRecommendations,
+  generateController.getSubjectRecommendations,
 );
 router.post(
   "/explain-answer",
   protect,
   restrictTo("student"),
   aiLimiter,
-  explainAnswer,
+  generateController.explainAnswer,
 );
 router.post(
   "/batch-explain",
   protect,
   restrictTo("student"),
   aiLimiter,
-  batchExplainAnswers,
+  generateController.batchExplainAnswers,
 );
 router.post(
   "/quiz-feedback",
   protect,
   restrictTo("student"),
   aiLimiter,
-  generateQuizFeedback,
+  generateController.generateQuizFeedback,
 );
 
-// ── TEACHER ROUTES ─────────────────────────────────────────
 router.post(
   "/generate-questions",
   protect,
   teacherOrAdmin,
   aiLimiter,
-  generateQuestionValidator,
-  generateQuestions,
+  generateController.generateQuestions,
 );
 router.post(
   "/bulk-generate",
   protect,
   restrictTo("admin"),
   aiLimiter,
-  bulkGenerateQuestions,
+  generateController.bulkGenerateQuestions,
 );
 router.post(
   "/validate-question",
   protect,
   teacherOrAdmin,
   aiLimiter,
-  validateQuestionValidator,
-  validateQuestion,
+  validateController.validateQuestion,
 );
 router.post(
   "/batch-validate",
   protect,
   teacherOrAdmin,
   aiLimiter,
-  batchValidateQuestions,
+  validateController.batchValidateQuestions,
 );
 router.get(
   "/validate-question/:id",
   protect,
   teacherOrAdmin,
   validateMongoId("id"),
-  validateQuestionById,
+  validateController.validateQuestionById,
 );
 router.get(
   "/validate-my-questions",
   protect,
   restrictTo("teacher"),
-  validateTeacherQuestions,
+  validateController.validateTeacherQuestions,
 );
 router.get(
   "/validation-history",
   protect,
   teacherOrAdmin,
-  getValidationHistory,
+  validateController.getValidationHistory,
 );
-router.get("/my-history", protect, teacherOrAdmin, getMyAIHistory);
+router.get(
+  "/my-history",
+  protect,
+  teacherOrAdmin,
+  generateController.getMyAIHistory,
+);
 
-// ── ADMIN ROUTES ───────────────────────────────────────────
-router.get("/usage-stats", protect, restrictTo("admin"), getAIUsageStats);
+router.get(
+  "/usage-stats",
+  protect,
+  restrictTo("admin"),
+  generateController.getAIUsageStats,
+);
 
 module.exports = router;
