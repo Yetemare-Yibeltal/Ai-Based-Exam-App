@@ -1,75 +1,174 @@
-exports.featureQuestion = catchAsync(async (req, res) => {
-  const question = await Question.findById(req.params.id);
+const Question = require("../models/Question");
+const { catchAsync } = require("../middleware/errorHandler");
+const {
+  successResponse,
+  errorResponse,
+  notFoundResponse,
+  paginatedResponse,
+} = require("../utils/apiResponse");
+const { getPagination, getPaginationMeta } = require("../utils/pagination");
+const logger = require("../utils/logger");
+
+exports.getQuestions = catchAsync(async (req, res) => {
+  const { page, limit, skip } = getPagination(req.query);
+  const { subject, difficulty, grade, isAIGenerated, search } = req.query;
+
+  const filter = { status: "approved", isActive: true };
+
+  if (subject) filter.subject = subject.toLowerCase();
+  if (difficulty) filter.difficulty = difficulty;
+  if (grade) filter.$or = [{ grade }, { grade: "Both" }];
+  if (isAIGenerated !== undefined)
+    filter.isAIGenerated = isAIGenerated === "true";
+  if (search) {
+    filter.$or = [
+      { questionText: { $regex: search, $options: "i" } },
+      { topic: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  const [questions, total] = await Promise.all([
+    Question.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .select(
+        "questionText options subject difficulty grade topic imageUrl year isAIGenerated",
+      ),
+    Question.countDocuments(filter),
+  ]);
+
+  return paginatedResponse(
+    res,
+    "Questions retrieved successfully",
+    questions.map((q) => q.getSafeQuestion()),
+    getPaginationMeta(total, page, limit),
+  );
+});
+
+exports.getQuestionById = catchAsync(async (req, res) => {
+  const question = await Question.findOne({
+    _id: req.params.id,
+    status: "approved",
+    isActive: true,
+  }).select(
+    "questionText options subject difficulty grade topic imageUrl year isAIGenerated",
+  );
+
   if (!question) return notFoundResponse(res, "Question not found");
 
-  if (question.status !== "approved") {
-    return errorResponse(res, "Only approved questions can be featured", 400);
+  return successResponse(res, "Question retrieved successfully", {
+    question: question.getSafeQuestion(),
+  });
+});
+
+exports.getSubjectStats = catchAsync(async (req, res) => {
+  const stats = await Question.getSubjectStats();
+  return successResponse(res, "Subject statistics retrieved successfully", {
+    subjects: stats,
+  });
+});
+
+exports.checkAnswers = catchAsync(async (req, res) => {
+  const { answers } = req.body;
+
+  if (!answers || !Array.isArray(answers) || answers.length === 0) {
+    return errorResponse(res, "Answers array is required", 400);
   }
 
-  question.tags = question.tags || [];
-  const isFeatured = question.tags.includes("featured");
+  const questionIds = answers.map((a) => a.questionId);
+  const questions = await Question.find({
+    _id: { $in: questionIds },
+    status: "approved",
+  }).select("correctAnswer explanation");
 
-  if (isFeatured) {
-    question.tags = question.tags.filter((t) => t !== "featured");
-  } else {
-    question.tags.push("featured");
+  if (questions.length === 0)
+    return errorResponse(res, "No valid questions found", 400);
+
+  const questionMap = {};
+  questions.forEach((q) => {
+    questionMap[q._id.toString()] = q;
+  });
+
+  let correctCount = 0;
+  const results = [];
+
+  for (const answer of answers) {
+    const question = questionMap[answer.questionId?.toString()];
+    if (!question) continue;
+
+    const isCorrect =
+      question.correctAnswer === parseInt(answer.selectedAnswer);
+    if (isCorrect) correctCount++;
+
+    results.push({
+      questionId: answer.questionId,
+      selectedAnswer: parseInt(answer.selectedAnswer),
+      correctAnswer: question.correctAnswer,
+      isCorrect,
+      explanation: question.explanation,
+    });
+
+    question.updateStats(isCorrect, answer.timeToAnswer || 0).catch((err) => {
+      logger.error(`Failed to update question stats: ${err.message}`);
+    });
   }
 
-  await question.save({ validateBeforeSave: false });
+  const total = results.length;
+  const percentage = Math.round((correctCount / total) * 100);
+
+  return successResponse(res, "Answers checked successfully", {
+    totalQuestions: total,
+    correctAnswers: correctCount,
+    wrongAnswers: total - correctCount,
+    percentage,
+    results,
+  });
+});
+
+exports.reportQuestion = catchAsync(async (req, res) => {
+  const { reason, details } = req.body;
+
+  const validReasons = [
+    "wrong_answer",
+    "unclear_question",
+    "outdated",
+    "duplicate",
+    "inappropriate",
+    "other",
+  ];
+
+  if (!reason || !validReasons.includes(reason)) {
+    return errorResponse(
+      res,
+      `Reason must be one of: ${validReasons.join(", ")}`,
+      400,
+    );
+  }
+
+  const question = await Question.findOne({
+    _id: req.params.id,
+    status: "approved",
+    isActive: true,
+  });
+
+  if (!question) return notFoundResponse(res, "Question not found");
+
+  const alreadyReported = question.reports.some(
+    (r) => r.reportedBy?.toString() === req.userId?.toString(),
+  );
+
+  if (alreadyReported)
+    return errorResponse(res, "You have already reported this question", 400);
+
+  await question.addReport(req.userId, reason, details || null);
+
+  logger.info(
+    `Question reported — Question: ${question._id} — User: ${req.userId} — Reason: ${reason}`,
+  );
 
   return successResponse(
     res,
-    isFeatured
-      ? "Question unfeatured successfully"
-      : "Question featured successfully",
-    { question: question.getFullQuestion() },
+    "Question reported successfully. Our team will review it shortly.",
   );
 });
-const express = require("express");
-const router = express.Router();
-
-const { protect } = require("../../middleware/auth");
-const { adminOnly } = require("../../middleware/role");
-const {
-  validateMongoId,
-  validatePaginationQuery,
-} = require("../../middleware/validate");
-
-const questionsController = require("../../controllers/admin/questionsController");
-
-router.use(protect);
-router.use(adminOnly);
-
-router.get("/", validatePaginationQuery, questionsController.getAllQuestions);
-router.get("/stats", questionsController.getQuestionStats);
-router.get(
-  "/pending",
-  validatePaginationQuery,
-  questionsController.getPendingQuestions,
-);
-router.post("/bulk-approve", questionsController.bulkApprove);
-router.post("/bulk-reject", questionsController.bulkReject);
-router.get("/:id", validateMongoId("id"), questionsController.getQuestionById);
-router.put("/:id", validateMongoId("id"), questionsController.updateQuestion);
-router.delete(
-  "/:id",
-  validateMongoId("id"),
-  questionsController.deleteQuestion,
-);
-router.put(
-  "/:id/approve",
-  validateMongoId("id"),
-  questionsController.approveQuestion,
-);
-router.put(
-  "/:id/reject",
-  validateMongoId("id"),
-  questionsController.rejectQuestion,
-);
-router.put(
-  "/:id/feature",
-  validateMongoId("id"),
-  questionsController.featureQuestion,
-);
-
-module.exports = router;
