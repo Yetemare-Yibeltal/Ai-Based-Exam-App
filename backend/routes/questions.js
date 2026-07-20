@@ -25,3 +25,51 @@ exports.featureQuestion = catchAsync(async (req, res) => {
     { question: question.getFullQuestion() },
   );
 });
+const express = require("express");
+const router = express.Router();
+
+const { protect } = require("../../middleware/auth");
+const { adminOnly } = require("../../middleware/role");
+const {
+  validateMongoId,
+  validatePaginationQuery,
+} = require("../../middleware/validate");
+
+const questionsController = require("../../controllers/admin/questionsController");
+
+router.use(protect);
+router.use(adminOnly);
+
+router.get("/", validatePaginationQuery, questionsController.getAllQuestions);
+router.get("/stats", questionsController.getQuestionStats);
+router.get(
+  "/pending",
+  validatePaginationQuery,
+  questionsController.getPendingQuestions,
+);
+router.post("/bulk-approve", questionsController.bulkApprove);
+router.post("/bulk-reject", questionsController.bulkReject);
+router.get("/:id", validateMongoId("id"), questionsController.getQuestionById);
+router.put("/:id", validateMongoId("id"), questionsController.updateQuestion);
+router.delete(
+  "/:id",
+  validateMongoId("id"),
+  questionsController.deleteQuestion,
+);
+router.put(
+  "/:id/approve",
+  validateMongoId("id"),
+  questionsController.approveQuestion,
+);
+router.put(
+  "/:id/reject",
+  validateMongoId("id"),
+  questionsController.rejectQuestion,
+);
+router.put(
+  "/:id/feature",
+  validateMongoId("id"),
+  questionsController.featureQuestion,
+);
+
+module.exports = router;
