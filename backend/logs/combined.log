@@ -1,0 +1,46 @@
+[2026-07-20 22:38:10] INFO: 🚀 HEROY Server running in development mode on port 5000
+[2026-07-20 22:38:10] INFO: 📄 API Docs available at http://localhost:5000/api/docs
+[2026-07-20 22:38:10] INFO: ❤️  Health check at http://localhost:5000/health
+[2026-07-20 22:44:51] INFO: 🚀 HEROY Server running in development mode on port 5000
+[2026-07-20 22:44:51] INFO: 📄 API Docs available at http://localhost:5000/api/docs
+[2026-07-20 22:44:51] INFO: ❤️  Health check at http://localhost:5000/health
+[2026-07-20 22:52:15] INFO: 🚀 HEROY Server running in development mode on port 5000
+[2026-07-20 22:52:15] INFO: 📄 API Docs available at http://localhost:5000/api/docs
+[2026-07-20 22:52:15] INFO: ❤️  Health check at http://localhost:5000/health
+[2026-07-20 22:58:58] INFO: 🚀 HEROY Server running in development mode on port 5000
+[2026-07-20 22:58:58] INFO: 📄 API Docs available at http://localhost:5000/api/docs
+[2026-07-20 22:58:58] INFO: ❤️  Health check at http://localhost:5000/health
+[2026-07-21 08:39:32] INFO: 🚀 HEROY Server running in development mode on port 5000
+[2026-07-21 08:39:32] INFO: 📄 API Docs available at http://localhost:5000/api/docs
+[2026-07-21 08:39:32] INFO: ❤️  Health check at http://localhost:5000/health
+[2026-07-21 08:40:45] DEBUG: → GET /health from ::1
+[2026-07-21 08:40:45] DEBUG: ← GET /health 200 12ms
+[2026-07-21 08:40:45] DEBUG: → GET /favicon.ico from ::1
+[2026-07-21 08:40:45] WARN: 404 — GET /favicon.ico — IP: ::1
+[2026-07-21 08:40:45] WARN: ← GET /favicon.ico 404 4ms
+[2026-07-21 08:40:45] INFO: GET /favicon.ico [33m404[0m 4.551 ms — [guest] — body: {}
+[2026-07-21 08:40:55] DEBUG: → GET /api from ::1
+[2026-07-21 08:40:55] DEBUG: ← GET /api 200 9ms
+[2026-07-21 08:40:55] INFO: GET /api [32m200[0m 9.870 ms — [guest] — body: {}
+[2026-07-21 08:41:07] DEBUG: → GET /api/docs from ::1
+[2026-07-21 08:41:07] DEBUG: ← GET /api/docs 301 12ms
+[2026-07-21 08:41:07] INFO: GET /api/docs [36m301[0m 13.398 ms — [guest] — body: {}
+[2026-07-21 08:41:07] DEBUG: → GET /api/docs/ from ::1
+[2026-07-21 08:41:07] DEBUG: ← GET /api/docs/ 200 5ms
+[2026-07-21 08:41:07] INFO: GET /api/docs/ [32m200[0m 6.770 ms — [guest] — body: {}
+[2026-07-21 08:41:07] DEBUG: → GET /api/docs/swagger-ui.css from ::1
+[2026-07-21 08:41:07] DEBUG: → GET /api/docs/swagger-ui-bundle.js from ::1
+[2026-07-21 08:41:07] DEBUG: → GET /api/docs/swagger-ui-standalone-preset.js from ::1
+[2026-07-21 08:41:07] DEBUG: → GET /api/docs/swagger-ui-init.js from ::1
+[2026-07-21 08:41:07] DEBUG: ← GET /api/docs/swagger-ui-init.js 200 2ms
+[2026-07-21 08:41:07] INFO: GET /api/docs/swagger-ui-init.js [32m200[0m 3.428 ms — [guest] — body: {}
+[2026-07-21 08:41:07] DEBUG: ← GET /api/docs/swagger-ui.css 200 29ms
+[2026-07-21 08:41:07] INFO: GET /api/docs/swagger-ui.css [32m200[0m 17.353 ms — [guest] — body: {}
+[2026-07-21 08:41:07] DEBUG: ← GET /api/docs/swagger-ui-standalone-preset.js 200 36ms
+[2026-07-21 08:41:07] INFO: GET /api/docs/swagger-ui-standalone-preset.js [32m200[0m 17.996 ms — [guest] — body: {}
+[2026-07-21 08:41:07] DEBUG: ← GET /api/docs/swagger-ui-bundle.js 200 104ms
+[2026-07-21 08:41:07] INFO: GET /api/docs/swagger-ui-bundle.js [32m200[0m 20.823 ms — [guest] — body: {}
+[2026-07-21 08:41:08] DEBUG: → GET /api/docs/favicon-32x32.png from ::1
+[2026-07-21 08:41:08] DEBUG: ← GET /api/docs/favicon-32x32.png 200 5ms
+[2026-07-21 08:41:08] INFO: GET /api/docs/favicon-32x32.png [32m200[0m 4.349 ms — [guest] — body: {}
+[2026-07-21 08:43:10] INFO: SIGINT received. Shutting down gracefully...
