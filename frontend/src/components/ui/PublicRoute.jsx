@@ -1,21 +1,21 @@
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import useAuthStore from '../../store/useAuthStore';
-import { PageLoader } from './LoadingSpinner';
-import { HOME_BY_ROLE } from '../../constants/routes';
+import React from 'react'
+import { Navigate } from 'react-router-dom'
+import useAuthStore from '../../store/useAuthStore'
+import { PageLoader } from './LoadingSpinner'
+import { HOME_BY_ROLE } from '../../constants/routes'
 
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, role, isInitialized } = useAuthStore();
+  const { isAuthenticated, role, isInitialized } = useAuthStore()
 
   if (!isInitialized) {
-    return <PageLoader />;
+    return <PageLoader />
   }
 
   if (isAuthenticated && role) {
-    return <Navigate to={HOME_BY_ROLE[role] || '/student/home'} replace />;
+    return <Navigate to={HOME_BY_ROLE[role] || '/student/home'} replace />
   }
 
-  return children;
-};
+  return children
+}
 
-export default PublicRoute;
+export default PublicRoute
