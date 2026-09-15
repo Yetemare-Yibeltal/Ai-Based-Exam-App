@@ -1,100 +1,134 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import OptionButton from './OptionButton'
-import Badge from '../ui/Badge'
-import { getSubjectBgClass } from '../../utils/subjectColors'
+import { Link } from 'react-router-dom'
+import Button from '../ui/Button'
+import { GradeBadge } from '../ui/Badge'
+import {
+  formatTime,
+  getPerformanceLevel,
+  getScoreColor
+} from '../../utils/formatScore'
+import { ROUTES } from '../../constants/routes'
 
-const QuestionCard = ({
-  question,
-  questionNumber,
-  totalQuestions,
-  selectedAnswer,
-  onSelectAnswer,
-  showResult = false,
-  correctAnswer = null,
-  disabled = false
+const ResultCard = ({
+  score,
+  subject,
+  onRetry = null,
+  onViewDetails = null,
+  className = ''
 }) => {
-  if (!question) return null
+  if (!score) return null
 
-  const options = question.options || []
-  const subject = question.subject
-  const difficulty = question.difficulty
-
-  const difficultyConfig = {
-    easy: { label: 'Easy', variant: 'success' },
-    medium: { label: 'Medium', variant: 'warning' },
-    hard: { label: 'Hard', variant: 'danger' }
-  }
-
-  const diff = difficultyConfig[difficulty] || difficultyConfig.medium
+  const performance = getPerformanceLevel(score.percentage)
+  const scoreColor = getScoreColor(score.percentage)
 
   return (
     <motion.div
-      key={question._id || question.id}
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -20 }}
-      transition={{ duration: 0.3 }}
-      className='bg-white rounded-3xl shadow-card border border-gray-100 overflow-hidden'
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.4 }}
+      className={`bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden ${className}`}
     >
-      {/* Question header */}
-      <div className={`${getSubjectBgClass(subject)} px-6 py-4`}>
-        <div className='flex items-center justify-between'>
-          <span className='text-white text-sm font-semibold opacity-90 capitalize'>
-            {subject?.charAt(0).toUpperCase() + subject?.slice(1)}
-          </span>
-          <div className='flex items-center gap-2'>
-            <Badge variant={diff.variant} size='xs'>
-              {diff.label}
-            </Badge>
-            <span className='text-white text-sm font-bold opacity-90'>
-              Q{questionNumber}/{totalQuestions}
-            </span>
-          </div>
-        </div>
+      {/* Header */}
+      <div className='bg-gradient-to-r from-primary-900 to-blue-700 px-8 py-10 text-white text-center'>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', delay: 0.2 }}
+          className='text-7xl font-black mb-2'
+          style={{ color: scoreColor === '#1B3A6B' ? '#ffffff' : scoreColor }}
+        >
+          {score.percentage}%
+        </motion.div>
+        <GradeBadge grade={score.grade} />
+        <p className='mt-2 text-white text-opacity-80 capitalize text-lg font-semibold'>
+          {subject?.charAt(0).toUpperCase() + subject?.slice(1)} Quiz
+        </p>
       </div>
 
-      {/* Question body */}
-      <div className='p-6 sm:p-8'>
-        <h3 className='text-lg sm:text-xl font-semibold text-gray-900 mb-6 leading-relaxed'>
-          {question.questionText}
-        </h3>
+      {/* Stats */}
+      <div className='p-8'>
+        <div className='grid grid-cols-3 gap-4 mb-8'>
+          <div className='text-center'>
+            <p className='text-3xl font-bold text-green-600'>
+              {score.correctAnswers}
+            </p>
+            <p className='text-xs text-gray-500 mt-1'>Correct</p>
+          </div>
+          <div className='text-center'>
+            <p className='text-3xl font-bold text-red-500'>
+              {score.totalQuestions - score.correctAnswers}
+            </p>
+            <p className='text-xs text-gray-500 mt-1'>Wrong</p>
+          </div>
+          <div className='text-center'>
+            <p className='text-3xl font-bold text-gray-700'>
+              {formatTime(score.timeTaken)}
+            </p>
+            <p className='text-xs text-gray-500 mt-1'>Time</p>
+          </div>
+        </div>
 
-        {question.imageUrl && (
-          <div className='mb-6 rounded-xl overflow-hidden border border-gray-200'>
-            <img
-              src={question.imageUrl}
-              alt='Question diagram'
-              className='w-full object-contain max-h-64'
-            />
+        <div
+          className={`flex items-center gap-3 p-4 rounded-2xl mb-6 ${performance.bg}`}
+        >
+          <span className='text-2xl'>
+            {score.percentage >= 90
+              ? '🌟'
+              : score.percentage >= 75
+              ? '👍'
+              : score.percentage >= 50
+              ? '💪'
+              : '📚'}
+          </span>
+          <div>
+            <p className={`font-bold text-sm ${performance.color}`}>
+              {performance.label}
+            </p>
+            <p className='text-xs text-gray-500'>
+              {score.percentage >= 90
+                ? 'Outstanding performance! Keep it up!'
+                : score.percentage >= 75
+                ? "Great job! A little more practice and you'll be excellent!"
+                : score.percentage >= 50
+                ? 'Good effort! Review the topics you missed.'
+                : "Keep practicing! You'll improve with consistency."}
+            </p>
+          </div>
+        </div>
+
+        {score.aiFeedback && (
+          <div className='p-4 bg-blue-50 rounded-2xl border border-blue-100 mb-6'>
+            <div className='flex items-center gap-2 mb-2'>
+              <span>🤖</span>
+              <span className='text-sm font-semibold text-primary-900'>
+                AI Feedback
+              </span>
+            </div>
+            <p className='text-sm text-gray-700'>{score.aiFeedback}</p>
           </div>
         )}
 
         <div className='flex flex-col gap-3'>
-          {options.map((option, index) => (
-            <OptionButton
-              key={index}
-              index={index}
-              text={option}
-              isSelected={selectedAnswer === index}
-              isCorrect={showResult && correctAnswer === index}
-              isWrong={
-                showResult &&
-                selectedAnswer === index &&
-                correctAnswer !== index
-              }
-              onClick={() => !disabled && !showResult && onSelectAnswer(index)}
-              disabled={disabled || showResult}
-            />
-          ))}
+          <Link to={ROUTES.STUDENT_SUBJECTS}>
+            <Button variant='primary' fullWidth size='lg'>
+              Practice Another Subject
+            </Button>
+          </Link>
+          {onRetry && (
+            <Button variant='outline' fullWidth onClick={onRetry}>
+              Retry This Quiz
+            </Button>
+          )}
+          <Link to={ROUTES.STUDENT_SCORES}>
+            <Button variant='ghost' fullWidth>
+              View All Scores
+            </Button>
+          </Link>
         </div>
-
-        {question.topic && (
-          <p className='mt-4 text-xs text-gray-400'>Topic: {question.topic}</p>
-        )}
       </div>
     </motion.div>
   )
 }
 
-export default QuestionCard
+export default ResultCard
